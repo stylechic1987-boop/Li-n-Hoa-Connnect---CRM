@@ -33,10 +33,12 @@ export function useHRAuth() {
     }
 
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
+    const client = supabase;
+    if (!client) return () => { mounted = false; };
+    client.auth.getSession().then(({ data }) => {
       if (mounted) setSession(data.session);
       if (mounted && data.session) {
-        supabase
+        client
           .from("hr_profiles")
           .select("user_id,role,branch,center,employee_id")
           .eq("user_id", data.session.user.id)
@@ -50,14 +52,14 @@ export function useHRAuth() {
       }
     });
 
-    const { data } = supabase.auth.onAuthStateChange((_event, next) => {
+    const { data } = client.auth.onAuthStateChange((_event, next) => {
       setSession(next);
       if (!next) {
         setProfile(null);
         setLoading(false);
         return;
       }
-      supabase
+      client
         .from("hr_profiles")
         .select("user_id,role,branch,center,employee_id")
         .eq("user_id", next.user.id)
