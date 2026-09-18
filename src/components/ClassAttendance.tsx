@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from "react";
 import {Check,Printer,Plus} from "lucide-react";
-import {db} from "../lib/supabase"; import {useHRAuth} from "../lib/auth";
-import {collection,getDocs,query,where,addDoc,doc,setDoc} from "firebase/firestore";
+import {db} from "../lib/backend"; import {useHRAuth} from "../lib/auth";
+import {collection,getDocs,query,where,addDoc,doc,setDoc} from "../lib/backend";
 type C={id:string;code:string;name:string;course:string;teacher:string;teacherUserId:string|null;branch:string;center:string;schedule:string;totalSessions:number;status:string};
 type S={id:string;code:string;name:string;phone:string;classId:string;startDate:string}; type Se={id:string;classId:string;no:number;date:string;topic:string}; type M={id?:string;sessionId:string;studentId:string;attendance:string;homework:boolean;reason:string;noteDate:string};
 const demo:C[]=[{id:"C001",code:"LH-TQ-01",name:"Tiếng Trung giao tiếp cơ bản",course:"Giao tiếp",teacher:"Giáo viên tiếng Trung",teacherUserId:null,branch:"Bắc Ninh",center:"Bắc Ninh",schedule:"2-4-6 • 19:30–21:00",totalSessions:30,status:"Đang học"},{id:"C002",code:"HSK2-01",name:"HSK 0 → HSK2 4 kỹ năng",course:"HSK 3.0",teacher:"Giáo viên tiếng Trung",teacherUserId:null,branch:"Lạng Sơn",center:"Lạng Sơn",schedule:"3-5-7 • 19:30–21:00",totalSessions:45,status:"Đang học"}];
