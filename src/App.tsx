@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState} from "react";
 import {Users,Clock3,CalendarDays,Building2,LayoutDashboard,Network,BriefcaseBusiness,Plus,LogIn,LogOut,Search} from "lucide-react";
-import Login from "./components/Login"; import {useHRAuth} from "./lib/auth"; import {auth,db,firebaseConfigured} from "./lib/supabase"; import {collection,doc,getDocs,query,where,setDoc,updateDoc} from "firebase/firestore"; import ClassAttendance from "./components/ClassAttendance";
+import Login from "./components/Login"; import {useHRAuth} from "./lib/auth"; import {auth,db,backendConfigured} from "./lib/backend"; import {collection,doc,getDocs,query,where,setDoc,updateDoc} from "./lib/backend"; import ClassAttendance from "./components/ClassAttendance";
 
 type Emp={id:string;name:string;role:string;dept:string;branch:string;center:string;status:"Đang làm"|"Tạm nghỉ"|"Nghỉ việc";specialty:string;join:string;user_id?:string|null;db_id?:string};
 type Att={id:string;date:string;employee:string;user_id?:string;in?:string;out?:string;hours?:number;status:string};
@@ -17,7 +17,7 @@ const roleName:Record<string,string>={company_director:"Giám đốc công ty",b
 const today=new Date().toISOString().slice(0,10); const load=<T,>(k:string,d:T):T=>{try{return JSON.parse(localStorage.getItem(k)||"null")??d}catch{return d}};
 
 export default function App(){
- const {session,profile,loading}=useHRAuth(); const [demo,setDemo]=useState(!firebaseConfigured); const [tab,setTab]=useState("dashboard");
+ const {session,profile,loading}=useHRAuth(); const [demo,setDemo]=useState(!backendConfigured); const [tab,setTab]=useState("dashboard");
  const [employees,setEmployees]=useState<Emp[]>(()=>load("lh_employees",seed)); const [attendance,setAttendance]=useState<Att[]>(()=>load("lh_attendance",[]));
  const [queryText,setQueryText]=useState(""); const [show,setShow]=useState(false); const [busy,setBusy]=useState(false);
  const [form,setForm]=useState<Emp>({id:"",name:"",role:"mkt",dept:"Marketing",branch:"Lạng Sơn",center:"Lạng Sơn",status:"Đang làm",specialty:"",join:today});
@@ -49,7 +49,7 @@ export default function App(){
  const stats={total:employees.length,active:employees.filter(e=>e.status==="Đang làm").length,checked:checked.length,missing:Math.max(0,employees.filter(e=>e.status==="Đang làm").length-checked.length)};
  const nav:Array<[string,string,any]>=[["dashboard","Tổng quan",LayoutDashboard],["employees","Nhân viên",Users],["attendance","Chấm công",Clock3],["schedule","Lịch làm việc",CalendarDays],["leave","Nghỉ phép",BriefcaseBusiness],["org","Sơ đồ tổ chức",Network],["branches","Chi nhánh & trung tâm",Building2],["class-attendance","Điểm danh lớp học",Users]];
  if(loading)return <div className="login-page"><div className="login-box"><h2>Đang tải hệ thống…</h2></div></div>;
- if(firebaseConfigured&&!session&&!demo)return <Login onDemo={()=>setDemo(true)}/>;
+ if(backendConfigured&&!session&&!demo)return <Login onDemo={()=>setDemo(true)}/>;
  return <div className="app"><aside className="side"><div className="brand">LIÊN HOA<small>CONNECT • HR & CRM</small></div><div className="nav">{nav.map(([id,label,I])=><button className={tab===id?"active":""} onClick={()=>setTab(id)} key={id}><I size={16} style={{verticalAlign:"middle",marginRight:9}}/>{label}</button>)}</div><div style={{position:"absolute",bottom:22,color:"#9ca3af",fontSize:11}}>Liên Hoa Global Education</div></aside>
  <main className="main"><div className="top"><div><div className="title">{nav.find(x=>x[0]===tab)?.[1]}</div><div className="sub">Quản lý nhân sự • ngày {new Date().toLocaleDateString("vi-VN")} {isLive&&profile?("• "+(roleName[profile.role]||profile.role)):"• Bản demo"}</div></div><div style={{display:"flex",gap:8}}>{isLive&&<button className="btn gray" onClick={()=>auth?.signOut()}>Đăng xuất</button>}{canManage||demo?<button className="btn" onClick={()=>{setForm({...form,id:"LH"+String(employees.length+1).padStart(3,"0")});setShow(true)}}><Plus size={15}/> Thêm nhân viên</button>:null}</div></div>
  {tab==="class-attendance"&&<ClassAttendance/>}
