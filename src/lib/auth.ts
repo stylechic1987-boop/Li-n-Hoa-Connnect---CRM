@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "./firebase";
+import { auth, db } from "./supabase";
 
 export type HRRole="company_director"|"branch_director"|"center_director"|"mkt"|"sale"|"teacher_chinese"|"teacher_english"|"teacher_korean"|"admin";
 export type HRProfile={user_id:string;role:HRRole;branch:string|null;center:string|null;employee_id:string|null};
