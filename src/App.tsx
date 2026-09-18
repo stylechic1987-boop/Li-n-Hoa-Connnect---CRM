@@ -4,7 +4,7 @@ import Login from "./components/Login";
 import { useHRAuth } from "./lib/auth";
 import { supabase, supabaseConfigured } from "./lib/supabase";
 
-type Emp={id:string;name:string;role:string;dept:string;branch:string;center:string;status:"Đang làm"|"Tạm nghỉ"|"Nghỉ việc";specialty:string;join:string;user_id?:string|null};
+type Emp={id:string;name:string;role:string;dept:string;branch:string;center:string;status:"Đang làm"|"Tạm nghỉ"|"Nghỉ việc";specialty:string;join:string;user_id?:string|null;db_id?:string};
 type Att={id:string;date:string;employee:string;in?:string;out?:string;hours?:number;status:string};
 
 const seed:Emp[]=[
@@ -41,7 +41,7 @@ export default function App(){
      supabase.from("hr_employees").select("id,employee_code,full_name,title,department,role,branch,center,specialty,start_date,status,user_id").order("employee_code"),
      supabase.from("hr_attendance").select("id,work_date,employee_id,check_in,check_out,worked_minutes,status").eq("work_date",today)
    ]);
-   if(es)setEmployees(es.map((e:any)=>({id:e.employee_code,name:e.full_name,role:e.role,dept:e.department,branch:e.branch,center:e.center||"",status:e.status,specialty:e.specialty||"",join:e.start_date,user_id:e.user_id})));
+   if(es)setEmployees(es.map((e:any)=>({id:e.employee_code,name:e.full_name,role:e.role,dept:e.department,branch:e.branch,center:e.center||"",status:e.status,specialty:e.specialty||"",join:e.start_date,user_id:e.user_id,db_id:e.id})));
    if(as)setAttendance(as.map((a:any)=>({id:a.id,date:a.work_date,employee:a.employee_id,in:a.check_in?new Date(a.check_in).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}):undefined,out:a.check_out?new Date(a.check_out).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}):undefined,hours:a.worked_minutes?Math.round(a.worked_minutes/60*100)/100:undefined,status:a.status})));
    setBusy(false);
  }
