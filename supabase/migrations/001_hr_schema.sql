@@ -97,35 +97,46 @@ create index if not exists idx_hr_employees_center on public.hr_employees(center
 create index if not exists idx_hr_attendance_date on public.hr_attendance(work_date);
 create index if not exists idx_hr_leave_dates on public.hr_leave_requests(start_date,end_date);
 
-create or replace function public.hr_my_role()
+create schema if not exists private;
+
+create or replace function private.hr_my_role()
 returns public.hr_role
 language sql
 stable
 security definer
-set search_path = public
-as $$
-  select role from public.hr_profiles where user_id = auth.uid();
-$$;
+set search_path = public, private
+as $
+  select role from public.hr_profiles where user_id = (select auth.uid());
+$;
 
-create or replace function public.hr_my_branch()
+create or replace function private.hr_my_branch()
 returns text
 language sql
 stable
 security definer
-set search_path = public
-as $$
-  select branch from public.hr_profiles where user_id = auth.uid();
-$$;
+set search_path = public, private
+as $
+  select branch from public.hr_profiles where user_id = (select auth.uid());
+$;
 
-create or replace function public.hr_my_center()
+create or replace function private.hr_my_center()
 returns text
 language sql
 stable
 security definer
-set search_path = public
-as $$
-  select center from public.hr_profiles where user_id = auth.uid();
-$$;
+set search_path = public, private
+as $
+  select center from public.hr_profiles where user_id = (select auth.uid());
+$;
+
+revoke all on schema private from public;
+grant usage on schema private to authenticated;
+revoke all on function private.hr_my_role() from public;
+revoke all on function private.hr_my_branch() from public;
+revoke all on function private.hr_my_center() from public;
+grant execute on function private.hr_my_role() to authenticated;
+grant execute on function private.hr_my_branch() to authenticated;
+grant execute on function private.hr_my_center() to authenticated;
 
 alter table public.hr_profiles enable row level security;
 alter table public.hr_employees enable row level security;
@@ -135,40 +146,40 @@ alter table public.hr_leave_requests enable row level security;
 
 drop policy if exists hr_profiles_self on public.hr_profiles;
 create policy hr_profiles_self on public.hr_profiles
-for select using (user_id = auth.uid() or public.hr_my_role() in ('company_director','admin'));
+for select using (user_id = auth.uid() or private.hr_my_role() in ('company_director','admin'));
 
 drop policy if exists hr_employees_select on public.hr_employees;
 create policy hr_employees_select on public.hr_employees
 for select using (
-  public.hr_my_role() in ('company_director','admin')
-  or (public.hr_my_role() = 'branch_director' and branch = public.hr_my_branch())
-  or (public.hr_my_role() = 'center_director' and center = public.hr_my_center())
+  private.hr_my_role() in ('company_director','admin')
+  or (private.hr_my_role() = 'branch_director' and branch = private.hr_my_branch())
+  or (private.hr_my_role() = 'center_director' and center = private.hr_my_center())
   or user_id = auth.uid()
 );
 
 drop policy if exists hr_employees_write on public.hr_employees;
 create policy hr_employees_write on public.hr_employees
 for all using (
-  public.hr_my_role() in ('company_director','admin')
-  or (public.hr_my_role() = 'branch_director' and branch = public.hr_my_branch())
-  or (public.hr_my_role() = 'center_director' and center = public.hr_my_center())
+  private.hr_my_role() in ('company_director','admin')
+  or (private.hr_my_role() = 'branch_director' and branch = private.hr_my_branch())
+  or (private.hr_my_role() = 'center_director' and center = private.hr_my_center())
 ) with check (
-  public.hr_my_role() in ('company_director','admin')
-  or (public.hr_my_role() = 'branch_director' and branch = public.hr_my_branch())
-  or (public.hr_my_role() = 'center_director' and center = public.hr_my_center())
+  private.hr_my_role() in ('company_director','admin')
+  or (private.hr_my_role() = 'branch_director' and branch = private.hr_my_branch())
+  or (private.hr_my_role() = 'center_director' and center = private.hr_my_center())
 );
 
 drop policy if exists hr_attendance_select on public.hr_attendance;
 create policy hr_attendance_select on public.hr_attendance
 for select using (
-  public.hr_my_role() in ('company_director','admin')
+  private.hr_my_role() in ('company_director','admin')
   or exists (
     select 1 from public.hr_employees e
     where e.id = employee_id
       and (
         e.user_id = auth.uid()
-        or (public.hr_my_role() = 'branch_director' and e.branch = public.hr_my_branch())
-        or (public.hr_my_role() = 'center_director' and e.center = public.hr_my_center())
+        or (private.hr_my_role() = 'branch_director' and e.branch = private.hr_my_branch())
+        or (private.hr_my_role() = 'center_director' and e.center = private.hr_my_center())
       )
   )
 );
@@ -176,25 +187,25 @@ for select using (
 drop policy if exists hr_attendance_write on public.hr_attendance;
 create policy hr_attendance_write on public.hr_attendance
 for all using (
-  public.hr_my_role() in ('company_director','admin')
+  private.hr_my_role() in ('company_director','admin')
   or exists (
     select 1 from public.hr_employees e
     where e.id = employee_id
       and (
         e.user_id = auth.uid()
-        or (public.hr_my_role() = 'branch_director' and e.branch = public.hr_my_branch())
-        or (public.hr_my_role() = 'center_director' and e.center = public.hr_my_center())
+        or (private.hr_my_role() = 'branch_director' and e.branch = private.hr_my_branch())
+        or (private.hr_my_role() = 'center_director' and e.center = private.hr_my_center())
       )
   )
 ) with check (
-  public.hr_my_role() in ('company_director','admin')
+  private.hr_my_role() in ('company_director','admin')
   or exists (
     select 1 from public.hr_employees e
     where e.id = employee_id
       and (
         e.user_id = auth.uid()
-        or (public.hr_my_role() = 'branch_director' and e.branch = public.hr_my_branch())
-        or (public.hr_my_role() = 'center_director' and e.center = public.hr_my_center())
+        or (private.hr_my_role() = 'branch_director' and e.branch = private.hr_my_branch())
+        or (private.hr_my_role() = 'center_director' and e.center = private.hr_my_center())
       )
   )
 );
@@ -205,20 +216,20 @@ for select using (auth.uid() is not null);
 
 drop policy if exists hr_shifts_write on public.hr_shifts;
 create policy hr_shifts_write on public.hr_shifts
-for all using (public.hr_my_role() in ('company_director','admin','branch_director','center_director'))
-with check (public.hr_my_role() in ('company_director','admin','branch_director','center_director'));
+for all using (private.hr_my_role() in ('company_director','admin','branch_director','center_director'))
+with check (private.hr_my_role() in ('company_director','admin','branch_director','center_director'));
 
 drop policy if exists hr_leave_select on public.hr_leave_requests;
 create policy hr_leave_select on public.hr_leave_requests
 for select using (
-  public.hr_my_role() in ('company_director','admin')
+  private.hr_my_role() in ('company_director','admin')
   or exists (
     select 1 from public.hr_employees e
     where e.id = employee_id
       and (
         e.user_id = auth.uid()
-        or (public.hr_my_role() = 'branch_director' and e.branch = public.hr_my_branch())
-        or (public.hr_my_role() = 'center_director' and e.center = public.hr_my_center())
+        or (private.hr_my_role() = 'branch_director' and e.branch = private.hr_my_branch())
+        or (private.hr_my_role() = 'center_director' and e.center = private.hr_my_center())
       )
   )
 );
@@ -226,10 +237,10 @@ for select using (
 drop policy if exists hr_leave_write on public.hr_leave_requests;
 create policy hr_leave_write on public.hr_leave_requests
 for all using (
-  public.hr_my_role() in ('company_director','admin','branch_director','center_director')
+  private.hr_my_role() in ('company_director','admin','branch_director','center_director')
   or exists (select 1 from public.hr_employees e where e.id = employee_id and e.user_id = auth.uid())
 ) with check (
-  public.hr_my_role() in ('company_director','admin','branch_director','center_director')
+  private.hr_my_role() in ('company_director','admin','branch_director','center_director')
   or exists (select 1 from public.hr_employees e where e.id = employee_id and e.user_id = auth.uid())
 );
 
@@ -238,3 +249,7 @@ select 'Ca hành chính','08:00','17:30',60,10
 where not exists (select 1 from public.hr_shifts where name='Ca hành chính');
 
 -- Never store passwords or service-role keys in this repository.
+
+
+grant select on public.hr_profiles, public.hr_employees, public.hr_shifts, public.hr_attendance, public.hr_leave_requests to authenticated;
+grant insert, update, delete on public.hr_employees, public.hr_shifts, public.hr_attendance, public.hr_leave_requests to authenticated;
