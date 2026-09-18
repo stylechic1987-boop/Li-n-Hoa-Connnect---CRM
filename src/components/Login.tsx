@@ -1,7 +1,7 @@
 import { FormEvent,useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { LogIn } from "lucide-react";
-import { auth,firebaseConfigured } from "../lib/firebase";
+import { auth,firebaseConfigured } from "../lib/supabase";
 
 export default function Login({onDemo}:{onDemo:()=>void}){
  const [email,setEmail]=useState("");const [password,setPassword]=useState("");const [busy,setBusy]=useState(false);const [error,setError]=useState("");
