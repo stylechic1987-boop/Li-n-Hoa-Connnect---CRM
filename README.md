@@ -1,15 +1,36 @@
-# Liên Hoa Connect — Quản lý Nhân sự
+# Liên Hoa Connect — HR & CRM
 
-CRM + HR cho Công ty TNHH Giáo dục Liên Hoa Global Education.
+React/Vite application for Liên Hoa Global Education.
 
-## HR
-- Cấp quyền: Giám đốc công ty → Giám đốc chi nhánh → Giám đốc trung tâm → MKT/Sale/Giáo viên.
-- Nhân sự: hồ sơ, chức danh, chi nhánh/trung tâm, chuyên môn.
-- Chấm công: vào ca, kết thúc ca, giờ làm, đi muộn/về sớm.
-- Ca làm việc, lịch, nghỉ phép và báo cáo.
+## HR production layer
 
-## Chạy local
+The HR module now has:
+- Supabase email/password login with persistent sessions.
+- Role model: Giám đốc công ty → Giám đốc chi nhánh → Giám đốc trung tâm → MKT/Sale/giáo viên.
+- PostgreSQL tables for employees, shifts, attendance and leave requests.
+- Row Level Security policies for company/branch/center/self scope.
+- Real check-in/check-out persistence when Supabase is configured.
+- Local demo mode when Supabase variables are not present.
+
+## Database setup
+
+Run `supabase/migrations/001_hr_schema.sql` in the target Supabase project's SQL editor.
+
+Then configure:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+Create Auth users in Supabase Authentication and create a matching row in `hr_profiles` for each user. Do not put passwords, service-role keys, or other secrets in GitHub.
+
+## Development
+
 ```bash
 npm install
 npm run dev
-``
+```
+
+## Build
+
+```bash
+npm run build
+```
