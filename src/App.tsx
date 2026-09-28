@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState} from "react";
 import {Users,Clock3,CalendarDays,Building2,LayoutDashboard,Network,BriefcaseBusiness,Plus,LogIn,LogOut,Search} from "lucide-react";
-import Login from "./components/Login"; import {useHRAuth} from "./lib/auth"; import {auth,db,backendConfigured} from "./lib/backend"; import {collection,doc,getDocs,query,where,setDoc,updateDoc} from "./lib/backend"; import ClassAttendance from "./components/ClassAttendance";
+import Login from "./components/Login"; import {useHRAuth} from "./lib/auth"; import {auth,db,backendConfigured} from "./lib/backend"; import {collection,doc,getDocs,query,where,setDoc,updateDoc,addDoc} from "./lib/backend"; import ClassAttendance from "./components/ClassAttendance";
 
 type Emp={id:string;name:string;role:string;dept:string;branch:string;center:string;status:"Đang làm"|"Tạm nghỉ"|"Nghỉ việc";specialty:string;join:string;user_id?:string|null;db_id?:string};
 type Att={id:string;date:string;employee:string;user_id?:string;in?:string;out?:string;hours?:number;status:string};
@@ -42,7 +42,7 @@ export default function App(){
   if(a)saveAtt(attendance.map(x=>x.id===a.id?{...x,out:new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}),status:"Đã hoàn thành"}:x));
  }
  async function addEmployee(){
-  if(isLive&&db){const id=form.id||"LH"+String(employees.length+1).padStart(3,"0");await setDoc(doc(collection(db,"employees")), {employee_code:id,full_name:form.name,title:form.role,department:form.dept,role:form.role,branch:form.branch,center:form.center,specialty:form.specialty,start_date:form.join,status:form.status,user_id:null});await refreshLive();setShow(false);return}
+  if(isLive&&db){const id=form.id||"LH"+String(employees.length+1).padStart(3,"0");await addDoc(collection(db,"employees"), {employee_code:id,full_name:form.name,title:form.role,department:form.dept,role:form.role,branch:form.branch,center:form.center,specialty:form.specialty,start_date:form.join,status:form.status,user_id:null});await refreshLive();setShow(false);return}
   const next={...form,id:form.id||"LH"+String(employees.length+1).padStart(3,"0")};setEmployees(x=>[...x,next]);localStorage.setItem("lh_employees",JSON.stringify([...employees,next]));setShow(false);
  }
  const checked=attendance.filter(a=>a.date===today); const visibleEmployees=useMemo(()=>employees.filter(e=>(e.name+e.id+(roleName[e.role]||e.role)+e.branch).toLowerCase().includes(queryText.toLowerCase())),[employees,queryText]);
